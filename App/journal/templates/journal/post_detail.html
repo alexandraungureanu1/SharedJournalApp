@@ -1,0 +1,240 @@
+{% load static %}
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+    integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="{% static 'journal/deleteImage.js' %}"></script>
+  <script src="{% static 'journal/analyzeImage.js' %}"></script>
+  <script src="{% static 'journal/analyzeAudio.js' %}"></script>
+  <script src="{% static 'journal/deleteAudio.js' %}"></script>
+
+  <link rel="stylesheet" type="text/css" href="{% static 'journal/main.css' %}">
+
+  {% if title %}
+  <title>Shared Journal - {{ title }}</title>
+  {% else %}
+  <title>Shared Journal</title>
+  {% endif %}
+
+</head>
+
+<body>
+  <header class="site-header">
+    <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
+      <div class="container">
+        <a class="navbar-brand mr-4" style="color: #5D3FD3" href="{% url 'journal-home' %}">Shared Journal</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle"
+          aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarToggle">
+          <div class="navbar-nav mr-auto">
+            <a class="nav-link" href="{% url 'journal-home' %}">Home</a>
+            <a class="nav-link" href="{% url 'journal-about' %}">My posts</a>
+          </div>
+          <!-- Navbar Right Side -->
+          <div class="navbar-nav">
+            {% if user.is_authenticated %}
+            <a class="nav-link" href="{% url 'post-create' %}">New Post</a>
+            <a class="nav-link" href="{% url 'profile' %}">Profile</a>
+            <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+            {% else %}
+            <a class="nav-link" href="{% url 'login' %}">Login</a>
+            <a class="nav-link" href="{% url 'register' %}">Register</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+  <main role="main" class="custom-container" style="padding-left: 70px; padding-right: 60px;">
+    <div class="row">
+      <div class="col-8">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% block content %}
+        <article class="media content-section">
+          <img class="rounded-circle article-img" src="{{ object.author.profile.image.url }}">
+          <div class="media-body">
+            <div class="article-metadata">
+              <a class="mr-2" style="color:#5D3FD3" href="#">{{ object.author }}</a>
+              <small class="text-muted">{{ object.date_posted|date:"F d, Y" }}</small>
+              {% if object.author == user %}
+              <div>
+                <a class="btn btn-secondary btn-sm mt-1 mb-1" href="{% url 'post-update' object.id %}">Update</a>
+                <a class="btn btn-danger btn-sm mt-1 mb-1" href="{% url 'post-delete' object.id %}">Delete</a>
+              </div>
+              {% endif %}
+            </div>
+            <h4 class="article-title">{{ object.title }}</h4>
+            <p class="article-content">{{ object.content }}</p>
+          </div>
+        </article>
+        <div class="content-section">
+          <div id="loading-spinner">
+          </div>
+          <h5 class="card-title">Gallery</h5>
+          <div class="image-container">
+            {% for pair_images in all_images %}
+            <div class="image-item" style="position: relative;">
+              <img class="base-image" src="{{ pair_images.0.image.url }}" alt="Base Image">
+              {% if pair_images.1 %}
+              <img class="overlay-image" src="{{ pair_images.1.image.url }}" alt="Overlay Image">
+              {% endif %}
+              {% if object.author == user %}
+              <button style="border: none; background: none; top:0; position: absolute; z-index: 1; right: 1%;"
+                class="alink">
+                <img style="width: 15px; height: 15px;" src="{{ x_icon }}"></button>
+              <input type="hidden" class="delete-url" data-url="{% url 'delete-image' image_id=pair_images.0.id%}">
+              <button class="analyze"
+                style="border: none; background: none; top:0; position: absolute; z-index: 1; left: 0; content:'Analyze'">
+                <img style="width: 15px; height: 15px;" src="{{ analyze_icon }}"></button>
+              </button>
+              <input type="hidden" class="analyze-url" data-url="{% url 'analyze-image' image_id=pair_images.0.id%}">
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="content-section">
+          <div id="loading-spinner">
+          </div>
+          <h5 class="card-title">Audio</h5>
+          <div class="audio-container">
+            {% for pair_audio_file in all_audio_files %}
+            <div class="audio-item">
+              <audio controls>
+                <source src="{{ pair_audio_file.0.audio.url }}" type="audio/mpeg">
+                Your browser does not support the audio tag.
+              </audio>
+              {% if object.author == user %}
+              <button class="analyze-audio custom-button-analyze">Analyze Audio</button>
+              <input type="hidden" class="analyze-audio-url"
+                data-url="{% url 'analyze-audio' audio_id=pair_audio_file.0.id%}">
+              <button class="delete-audio custom-button-delete">Delete Audio</button>
+              <input type="hidden" class="delete-audio-url"
+                data-url="{% url 'delete-audio' audio_id=pair_audio_file.0.id%}">
+              {% endif %}
+              {% if pair_audio_file.1 %}
+              <p>{{ pair_audio_file.1.classification_result }}</p>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="content-section">
+          <div id="loading-spinner">
+          </div>
+          <h5 class="card-title">Comments</h5>
+          <div class="-container">
+            {% for comment in comments %}
+            <p>{{ comment.user.username }}: {{ comment.content }}</p>
+            {% endfor %}
+            <form id="postComment" action="{% url 'upload-comment' pk=object.id%}" enctype="multipart/form-data"
+              method="post">
+              {% csrf_token %}
+              <div class="input-group">
+                {{ comment_form.content }}
+                <span class="input-group-btn">
+                  <input type="submit" class="btn btn-primary" style="background:#E6E6FA; border:none; color:#5D3FD3;"
+                    value="Comment">
+                </span>
+              </div>
+            </form>
+            <div id="messageBox" style="display: none;"></div>
+          </div>
+        </div>
+
+        {% endblock %}
+      </div>
+
+      <div class="col-4">
+        <div class="content-section">
+          <h5>Stats</h5>
+          <p class='text-muted'>
+          <ul class="list-group">
+            <li class="list-group-item list-group-item-light">Help</li>
+            <li class="list-group-item list-group-item-light">Tips for a good journal</li>
+          </ul>
+          <p></p>
+          {% if object.author == user %}
+          <h5 class="card-title">Upload</h5>
+          <p class="card-text">Fill out the form and press submit in order to upload a new image or a new recording.</p>
+          <form action="{% url 'library-images-upload' pk=object.id%}" enctype="multipart/form-data" method="post">
+            {% csrf_token %}
+            {{ upload_form|crispy }}
+            <input type="submit" class="btn btn-upload w-100" value="Upload image">
+          </form>
+          <form action="{% url 'library-audio-upload' pk=object.id%}" enctype="multipart/form-data" method="post">
+            {% csrf_token %}
+            {{ upload_form_audio|crispy }}
+            <input type="submit" class="btn btn-upload w-100" value="Upload audio">
+          </form>
+          <p></p>
+          <p class="card-text">Or take your own picture right now!</p>
+          <div class="capture-container" style="display: flex; justify-content: center; align-items: center;">
+            <button id="open-camera-button" class="open-camera-button">Take Image</button>
+          </div>
+          <p class="card-text">Or audio!</p>
+          <div style="display: flex; justify-content: center; align-items: center;">
+            <button id="start" class="open-camera-button">Start recording</button>
+            <button id="stop" class="open-camera-button">Stop</button>
+            <div id="recording-indicator" style="display: none;">Recording...</div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+    integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+    crossorigin="anonymous"></script>
+  <script src="https://markjivko.com/dist/recorder.js"></script>
+
+  <div id="camera-container">
+    <button id="close-button">Close</button>
+    <video id="video-preview" autoplay></video>
+    <button id="capture-button">Capture Photo</button>
+    <canvas id="canvas" style="display: none;"></canvas>
+    <input type="hidden" id="capture-url" value="{% url 'capture_photo' pk=object.id %}">
+  </div>
+  <script src="{% static 'journal/capturePhoto.js' %}"></script>
+
+  <div id="recording-container">
+    <div id="recording-indicator" style="display: none;">Recording...</div>
+    <input type="hidden" id="recording-url" value="{% url 'record-audio' pk=object.id %}">
+  </div>
+
+  <script src="{% static 'journal/captureAudio.js' %}"></script>
+  <script src="{% static 'journal/showAnalyzeMessage.js' %}"></script>
+
+  </div>
+
+
+
+</body>
+
+</html>
