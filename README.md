@@ -48,11 +48,16 @@ Emotion detection from audio content is supported by a dataset available at [lin
 - Long Short-Term Memory (LSTM) - 81.48% accuracy.
 - Feedforward Neural Network (FNN) - 81.48% accuracy.
 
-## Screenshots
+## App Screenshots
 
 <img width="1122" alt="Screenshot 2023-09-08 at 18 14 20" src="https://github.com/alexandraungureanu1/SharedJournalApp/assets/79217352/1c84aad4-b0d8-4965-a720-d9eedfd79f38">
 
 <img width="1123" alt="Screenshot 2023-09-08 at 18 16 03" src="https://github.com/alexandraungureanu1/SharedJournalApp/assets/79217352/9af29c5e-2719-4fd5-ae70-c7c6b4144807">
 
+## Diagrams
+
+Flow of automatic detection functionalities with Google Cloud Functions
+
+<img width="1143" alt="Screenshot 2023-09-08 at 20 07 03" src="https://github.com/alexandraungureanu1/SharedJournalApp/assets/79217352/2aadb80d-3671-438e-85d4-11258bc68be2">
 
 
